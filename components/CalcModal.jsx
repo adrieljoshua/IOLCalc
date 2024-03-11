@@ -7,19 +7,20 @@ import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem'
 import Radio from '@mui/material/Radio';
 import { useState } from 'react';
-import FormControlLabel from '@mui/material/FormControlLabel';
+import {FormControl,FormControlLabel} from '@mui/material';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
+import { useForm } from 'react-hook-form';
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup';
 import '../src/index.css';
 import '../src/App.css';
 
 // eslint-disable-next-line react/prop-types
-function CalcModal({ open, handleClose }) {
+export default function CalcModal({ open, handleClose }) {
   const [value, setEyeValue] = useState('1');
   const [toricValue, setToricValue] = useState('yes');
   const [selectedIOLModel, setSelectedIOLModel] = useState('');   
-  const [formData1, setFormData1] = useState({});
-   const [formData2, setFormData2] = useState({});
   const handleEyeChange = (event, newValue) => {
     setEyeValue(newValue);
   };
@@ -32,82 +33,19 @@ function CalcModal({ open, handleClose }) {
     setSelectedIOLModel(event.target.value); 
   };
 
-   const handleCalculate = () => {
-  if (value === '1') {
-    const data1 = {
-      eye: value,
-      axialLength: document.getElementById('axial-length-os').value,
-      anteriorChamberLength: document.getElementById('ant-cham-len-os').value,
-      k1: document.getElementById('k1-os').value,
-      flatAxis: document.getElementById('flat-axis-os').value,
-      k2: document.getElementById('k2-os').value,
-      steepAxis: document.getElementById('steep-axis-os').value,
-      refractiveIndex: document.getElementById('ref-in-os').value,
-      deltaK: document.getElementById('delta-k-os').value,
-      targetRefSE: document.getElementById('target-ref-os').value,
-      incisionOrientation: document.getElementById('incision-orient-os').value,
-      sia: document.getElementById('sia-os').value,
-      IOLModel: selectedIOLModel,
-    };
-    setFormData1(data1);
-    console.log(data1); // Output the form data for eye = 1
-  } else {
-    const data2 = {
-      eye: value,
-      axialLength: document.getElementById('axial-length-od').value,
-      anteriorChamberLength: document.getElementById('ant-cham-len-od').value,
-      k1: document.getElementById('k1-od').value,
-      flatAxis: document.getElementById('flat-axis-od').value,
-      k2: document.getElementById('k2-od').value,
-      steepAxis: document.getElementById('steep-axis-od').value,
-      refractiveIndex: document.getElementById('ref-in-od').value,
-      deltaK: document.getElementById('delta-k-od').value,
-      targetRefSE: document.getElementById('target-ref-od').value,
-      incisionOrientation: document.getElementById('incision-orient-od').value,
-      sia: document.getElementById('sia-od').value,
-      IOLModel: selectedIOLModel,
-    };
-    setFormData2(data2);
-    console.log(data2); // Output the form data for eye = 2
+  const validationSchema = yup.object().shape({
+    pname: yup.string().required('Patient Name is required'),
+    pid: yup.number().required('Patient ID is required'),
+  });
+
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: yupResolver(validationSchema),
+  });
+
+  const onSubmit = (data) => {
+    // Handle form submission here, `data` contains the form values
+    console.log(data);
   }
-};
-
-
-  const refractiveIndexValues = [
-  {
-    value: 1.3315,
-    label: '1.3315',
-  },
-  {
-    value: 1.332,
-    label: '1.332',
-  },
-  {
-    value: 1.336,
-    label: '1.336',
-  },
-  {
-    value: 1.3375,
-    label: '1.3375',
-  },
-  {
-    value: 1.336,
-    label: '1.336',
-  }
-];
-
-const IOLModels = {
-  toric: [
-    { value: 'toric1', label: 'Toric Option 1' },
-    { value: 'toric2', label: 'Toric Option 2' },
-    { value: 'toric3', label: 'Toric Option 3' },
-  ],
-  nonToric: [
-    { value: 'nonToric1', label: 'Non-Toric Option 4' },
-    { value: 'nonToric2', label: 'Non-Toric Option 5' },
-    { value: 'nonToric3', label: 'Non-Toric Option 6' },
-  ]
-};
   
   return (
     <Modal open={open} onClose={handleClose}>
@@ -115,10 +53,14 @@ const IOLModels = {
         <Typography variant="h5" style={{ fontFamily: 'Roboto', fontWeight: 500 }}>
         IOL CALCULATOR
         </Typography>
-          <div className='formItems' style={styles.formItems}>           
-            <TextField id="p-name" label="Patient Name" variant="outlined" />
-            <TextField id="p-id" label="Patient ID" variant="outlined" />
-          </div>
+          <FormControl component="form" onSubmit={handleSubmit(onSubmit)}>
+          {/* Add error messages for validation */}
+          <TextField label="Patient Name" variant="outlined" {...register("pname")} />
+          {errors.pname && <p>{errors.pname.message}</p>}
+          <TextField label="Patient ID" variant="outlined" {...register("pid")} />
+          {errors.pid && <p>{errors.pid.message}</p>}
+          <Button type='submit' variant="contained">Submit</Button>
+          </FormControl>
           <Box sx={{ width: '100%', typography: 'body1' }}>
             <TabContext value={value}>
               <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -179,7 +121,7 @@ const IOLModels = {
                         ))
                       )}
                     </TextField>
-                    <Button variant="contained" onClick={handleCalculate}>Calculate</Button>
+                    <Button variant="contained">Calculate</Button>
                 </div>
               </TabPanel>
               <TabPanel value="2">
@@ -229,7 +171,7 @@ const IOLModels = {
                         ))
                       )}
                     </TextField>
-                    <Button variant="contained" onClick={handleCalculate}>Calculate</Button>
+                    <Button variant="contained">Calculate</Button>
                 </div>
               </TabPanel>
               
@@ -268,4 +210,38 @@ const styles= {
   },
 }
 
-export default CalcModal;
+  const refractiveIndexValues = [
+  {
+    value: 1.3315,
+    label: '1.3315',
+  },
+  {
+    value: 1.332,
+    label: '1.332',
+  },
+  {
+    value: 1.336,
+    label: '1.336',
+  },
+  {
+    value: 1.3375,
+    label: '1.3375',
+  },
+  {
+    value: 1.336,
+    label: '1.336',
+  }
+];
+
+const IOLModels = {
+  toric: [
+    { value: 'toric1', label: 'Toric Option 1' },
+    { value: 'toric2', label: 'Toric Option 2' },
+    { value: 'toric3', label: 'Toric Option 3' },
+  ],
+  nonToric: [
+    { value: 'nonToric1', label: 'Non-Toric Option 4' },
+    { value: 'nonToric2', label: 'Non-Toric Option 5' },
+    { value: 'nonToric3', label: 'Non-Toric Option 6' },
+  ],
+};
